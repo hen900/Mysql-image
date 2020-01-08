@@ -1,0 +1,168 @@
+# coding: utf=8
+from __future__ import division
+import os
+import sys
+import time
+
+
+class Vuln:
+
+    def __init__(self, desc, val, boolean):
+        self.desc = desc
+        self.boolean = boolean
+        self.val = val
+
+    def getValue(self):
+        return self.val
+
+    def getDescription(self):
+        return self.desc
+
+    def isFixed(self):
+        if os.system(self.boolean) == 0:
+            return True
+        else:
+            return False
+
+
+class Service:
+
+    def __init__(self, name, port):
+        self.port = port
+        self.name = name
+
+    def getPort(self):
+        return self.port
+
+    def getName(self):
+        return self.name
+
+    def isDown(self):
+        if os.system('netstat -tulpn| grep \"\:' + str(self.port) + '\"')  == 0:
+            return False
+        return True
+
+
+class User:
+
+    def __init__(self, name):
+        self.name = name
+
+    def getName(self):
+        return self.name
+
+    def works(self):
+        if os.system(' [ -e /home/' + self.name + '/ ]') \
+            + os.system(' [ "$(grep ' + self.name + ' /etc/passwd)" ]') \
+            == 0:
+            return True
+
+        return False
+    def isAdmin(self):
+        if os.system('grep sudo /etc/group| grep ' + self.name) == 0:
+            return True
+        return False
+
+
+def update():
+    percent = str(round(points / totalPoints * 100, 1)) + '%'
+    with open('/home/'+mainUser+'/Desktop/Score_Report.html', 'w') as f:
+        f.write('<!DOCTYPE html> <html> <head> <meta name="viewport" content="width=device-width, initial-scale=1"> <style> * { box-sizing: border-box; } .column { float: left; padding: 10px; height: 1500px; } .left, .right { width: 25%; } .middle { width: 50%; } .row:after { content: ""; display: table; clear: both; }</style> </head> <body><div class="row"> <div class="column left" style="background-color:#0d60bf;"></div> <div class="row"> <div class="column middle" style="background-color:#fff;"><h1 style="text-align: center;"><span style="font-family: arial, helvetica, sans-serif;">Unit 4 Score Report</span></h1><h2 style="text-align: center;"><br /><span style="font-family: arial, helvetica, sans-serif;">'
+                 + percent + ' completed</span></h2><p> </p>')
+        f.write('<p><span style="font-family: arial, helvetica, sans-serif;"><strong>'
+                 + str(penalties)
+                + ' Points in Scoring Penalties</strong></span></p> <font color="red">'
+                )
+        for i in services:
+            if i.isDown():
+                f.write('<p><span style="font-size: 10pt;  font-family: arial, helvetica, sans-serif;">'
+                         + i.getName()
+                        + ' not functional - 5 points</span></p>')
+        for i in users:
+            if not i.works():
+                f.write('<p><span style="font-size: 10pt;  font-family: arial, helvetica, sans-serif;"> User '
+                         + i.getName()
+                        + ' not functional - 5 points</span></p>')
+
+        for i in admins:
+           if not i.works():
+                f.write('<p><span style="font-size: 10pt;  font-family: arial, helvetica, sans-serif;"> User '
+                         + i.getName()
+                        + ' not functional - 5 points</span></p>')
+           if not i.isAdmin():
+                f.write('<p><span style="font-size: 10pt;  font-family: arial, helvetica, sans-serif;"> User '
+                         + i.getName()
+                        + ' not an admin - 5 points</span></p>')
+
+        f.write('</font><p><span style="font-family: arial, helvetica, sans-serif;"><strong>'
+                 + str(numFixedVulns) + ' out of ' + str(numVulns)
+                + '  Vulnerabilities Fixed</strong></span></p>\n')
+        for i in allVulns:
+            if i.isFixed():
+                f.write('<p><span style="font-size: 10pt; font-family: arial, helvetica, sans-serif;">'
+                         + i.getDescription() + ' - '
+                        + str(i.getValue()) + ' points</span></p>')
+        f.write('</div> <div class="row"> <div class="column right" style="background-color:#0d60bf;"></div> </body>'
+                )
+        f.write('<meta http-equiv="refresh" content="20">')
+        f.write('<footer><h6>Henry Mackay</h6></footer>')
+
+
+mainUser = 'analyst'
+users = [User('eric_rogers'), User('boe34_'), User('ken_grimwood'), User('monte3'), User('je3rryg'), User('june_w'), User('anne_pallad'), User('krist0benway')]
+admins = [User('analyst'), User('benjamin'), User('swagrobot'), User('andy76')]
+services = [Service('sshd', 22), Service('apache2', 80)]
+allVulns = [
+    Vuln('Forensics Question 1  correct', 8, '[ "$(grep 1234 /home/'+ mainUser + '/Desktop/Forensics_1.txt)" ]'),
+    Vuln('Forensics Question 2 correct', 8, '[ "$(grep 1000 /home/'+ mainUser + '/Desktop/Forensics_2.txt)" ]'),
+    Vuln('Forensics Question 3 correct', 8, '[ "$(grep \'/home/monte3/.tunes/\' /home/'+ mainUser + '/Desktop/Forensics_3.txt)" ]'),
+    Vuln('Removed unauthorized user corn23', 3,'! [ "$(grep corn23  /etc/passwd)" ]'),
+    Vuln('Removed unauthorized user batman', 3,'! [ "$(grep batman  /etc/passwd)" ]'),
+    Vuln('Removed unauthorized admin boe34_ ', 3,'! [ "$(grep sudo /etc/group | grep boe34_)" ]'),
+    Vuln('Removed unauthorized admin monte3 ', 3,'! [ "$(grep sudo /etc/group | grep monte3)" ]'),
+    Vuln('Login retries set', 5,'[ "$(grep LOGIN_RETRIES /etc/login.defs | grep 3)" ]'),
+    Vuln('Guest account is disabled', 5,'[ "$(grep guest /etc/lightdm/lightdm.conf | grep false)" ] '),
+    Vuln('Firewall protection enabled', 5,'[ "$(ufw status | grep enable)" ] '),
+    Vuln('Root login disabled', 5,'[ "$(grep PermitRootLogin /etc/ssh/sshd_config | grep No)" ]'),
+    Vuln('Password required for sudo', 5,'! [ "$(grep NOPASSWD /etc/sudoers)" ]'),
+    Vuln('Password policy enforced', 5,' [ "$( grep -E \'remember|minlen|ucredit|dcredit|ocredit|cracklib\' /etc/pam.d/common-password)" ] '),
+    Vuln('Security updates automatically installed', 5,' [ "$(grep -r Unattended\-Upgrade\ \"1\" /etc/apt)" ] '),
+    Vuln('Media files removed', 6, ' ! [ "$(find /home/monte3/.tunes | grep mp3)" ]'),
+    Vuln('Hacking tool nikto removed', 6, ' [ "$(dpkg --list | grep nikto)" ]'),
+    Vuln('Netcat listener disabled', 8,' ! [ "$(netstat -tulpn | grep  nc )" ] '),
+    Vuln('Bash updated', 3, '! [ "$(bash --version | grep 4.3.11)" ]'),
+    Vuln('Firefox updated', 3, '! [ "$(sudo -u ' + mainUser+ ' firefox -v | grep 65.0.1)" ]'),
+    ]
+
+
+numVulns = len(allVulns)
+
+while True:
+    totalPoints = 0
+    points = 0
+    numFixedVulns = 0
+    penalties = 0
+    for i in services:
+        if i.isDown():
+            penalties = penalties + 5
+
+    for i in users:
+        if not i.works():
+            penalties = penalties + 5
+    for i in admins:
+        if not i.works():
+            penalties= penalties + 5
+        if not i.isAdmin():
+            penalties= penalties + 5
+    for i in allVulns:
+        totalPoints = totalPoints + i.getValue()
+        if i.isFixed():
+            numFixedVulns = numFixedVulns + 1
+            points = points + i.getValue()
+
+    points = points - penalties
+
+    update()
+    time.sleep(60)
+
+			

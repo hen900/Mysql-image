@@ -1,0 +1,37 @@
+
+You have been hired by the Baltimore County Public Library to secure their database server. This database stores all the members of the BCPL and their information along with additional library databases.
+This BCPL security policies require that all user accounts be password protected. Employees are required to choose secure passwords, however this policy may not be currently enforced on this computer. The presence of any non-work related media files and "hacking tools" on any computers is strictly prohibited. This company currently does not use any centralized maintenance or polling tools to manage their IT equipment. This computer is for official business use only by authorized users.
+
+
+It is company policy to use only Ubuntu 14.04 on this computer. It is also company policy to use only the latest, official, stable Ubuntu 14.04 packages available for required software and services on this computer. Management has decided that the default web browser for all users on this computer should be the latest stable version of Firefox. Company policy is to never let users log in as root. If administrators need to run commands as root, they are required to use the "sudo" command. 
+
+All authorized users must be able to log in remotely using SSH. Therefore, sshd is a critical service and needs to remain enabled.
+
+
+Critical Services:
+
+    mysqld
+    sshd
+	
+
+Authorized Administrators and Users
+
+Authorized Administrators:
+analyst (you)
+    password: password
+benjamin
+    password: ZZ
+swagrobot
+    password: 3ndur4N(e&home
+amdy76
+    password: captain
+
+Authorized Users:
+eric_rogers
+boe34_
+ken_grimwood
+monte3
+je3rryg
+june_w
+anne_pallad
+krist0benway
